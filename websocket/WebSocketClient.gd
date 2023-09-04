@@ -22,6 +22,7 @@ enum ResponseActionCode {
 	SEND_DATA = 2,  # followed by token, then 0 or 1 for data or img, then bytes
 	SEND_TOKEN_LIST = 3,  # followed by array of tokens (little-endian u64)
 	SEND_TOKEN_KILL = 4,  # followed by token id
+	SEND_REG_RESPONSE = 5,  # followed by single byte representing boolean (0 or 1) to confirm REG_AS_GM or REG_AS_PLAYER
 }
 
 @export var handshake_headers: PackedStringArray
@@ -37,6 +38,7 @@ signal token_data_received(token: int, data: Variant)
 signal token_img_received(token: int, data: PackedByteArray)
 signal token_list_received(tokens: PackedInt64Array)
 signal token_kill_received(token: int)
+signal room_ready(success: bool)
 
 func _process(dt: float):
 	poll()
@@ -96,6 +98,8 @@ func handle_message() -> void:
 			token_list_received.emit(tokens)
 		ResponseActionCode.SEND_TOKEN_KILL:
 			token_kill_received.emit(pkt.decode_u64(1))
+		ResponseActionCode.SEND_REG_RESPONSE:
+			room_ready.emit(pkt.decode_u8(1) != 0)
 		var other:
 			push_error("Recieved invalid message code: %s" % other)
 

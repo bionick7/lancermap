@@ -16,6 +16,15 @@ config/features=PackedStringArray("4.0")
 boot_splash/bg_color=Color(0.141176, 0.141176, 0.141176, 1)
 config/icon="res://icon.png"
 
+[connections]
+
+socket_url="wss://lancermap.fly.dev:443"
+maps_url="https://lancermap.fly.dev:80/map/"
+test_socket_url="ws://localhost:8080"
+test_maps_url="http://localhost:8081/"
+in_testing=false
+in_testing.release=false
+
 [dotnet]
 
 project/assembly_name="LancerMap"

@@ -108,17 +108,6 @@ func serialize() -> Dictionary:
 		is_horizontal = is_horizontal,
 	}
 	
-func deserialize_image(data: PackedByteArray) -> void:
-	return
-	#var img := Image.new()
-	#var error := img.load_png_from_buffer(data)
-	#if error == OK:
-	#	$Map.texture = ImageTexture.create_from_image(img)
-	
-func serialize_image() -> PackedByteArray:
-	return PackedByteArray()
-	#return $Map.texture.get_image().save_png_to_buffer()
-	
 func _make_hex(center: Vector2, size: Vector2) -> PackedVector2Array:
 	var res: PackedVector2Array
 	if is_horizontal:

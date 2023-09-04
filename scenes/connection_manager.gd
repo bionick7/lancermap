@@ -24,8 +24,11 @@ func _ready():
 	map.grid_changed.connect(_update_grid)
 	get_viewport().files_dropped.connect(_on_files_dropped)
 	token_builder.request_remove.connect(_remove_token.bind(true))
-	
-	socket.connect_to_url("ws://localhost:8080/")
+		
+	if ProjectSettings.get("connections/in_testing"):
+		socket.connect_to_url(ProjectSettings.get("connections/test_socket_url"))
+	else:
+		socket.connect_to_url(ProjectSettings.get("connections/socket_url"))
 	#socket.connect_to_url("wss://lancermap.fly.dev")
 	
 	%ConnectionStatus.text = "Offline"
@@ -107,7 +110,7 @@ func _update_grid():
 func _update_map_image():
 	if room == "INVALID":
 		return
-	socket.send(room, WebSocketClient.RequestActionCode.SET_IMG, 0, map.serialize_image())
+	socket.send(room, WebSocketClient.RequestActionCode.SET_IMG, 0)
 	
 func _on_token_data_received(token_id: int, data: Variant) -> void:
 	print("%s Recieved data: token=%s, data=%s" % [self_name, token_id, data])
@@ -126,7 +129,7 @@ func _on_token_data_received(token_id: int, data: Variant) -> void:
 func _on_token_imgdata_received(token_id: int, data: PackedByteArray) -> void:
 	print("%s Recieved imgdata: token=%s, data=byte x %s" % [self_name, token_id, len(data)])
 	if token_id == 0:
-		map.deserialize_image(data)
+		$HexGrid/Map.download_map(room)
 		return
 	var token: Token
 	if token_id not in tokens:
@@ -161,10 +164,15 @@ func _on_host_pressed():
 	_update_grid()
 	_update_map_image()
 	%ConnectionStatus.text = "Playing as Gm"
+	
 	for id in tokens:
 		tokens[id].is_online = true
 		socket.send(room, WebSocketClient.RequestActionCode.SET_DATA, id, tokens[id].serialize())
 		socket.send(room, WebSocketClient.RequestActionCode.SET_IMG, id, tokens[id].serialize_image())
+	
+	var joined_successfull: bool = await socket.room_ready
+	if joined_successfull:
+		$HexGrid/Map.set_map(room, $HexGrid/Map.texture.get_image())
 
 func _on_join_pressed():
 	is_gm = false
@@ -175,3 +183,20 @@ func _on_join_pressed():
 	for id in keys:
 		tokens[id].queue_free()
 		tokens.erase(id)
+		
+	var joined_successfull: bool = await socket.room_ready
+	if joined_successfull:
+		$HexGrid/Map.download_map(room)
+
+func _on_set_map_pressed():
+	if not is_gm:
+		return
+	$FileDialog.popup_centered()
+	var file: String = await $FileDialog.file_selected
+	var img := Image.load_from_file(file)
+	if is_instance_valid(img):
+		$HexGrid/Map.set_map(room, img)
+	else:
+		push_error("Could not open \"%s\"" % file)
+		socket.send(room, WebSocketClient.RequestActionCode.SET_IMG, 0)
+	_update_map_image()
