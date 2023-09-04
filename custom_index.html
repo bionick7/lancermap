@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>My Template</title>
+        <meta charset="UTF-8">
+    </head>
+    <body>
+        <canvas id="canvas"></canvas>
+        <script src="$GODOT_URL"></script>
+        <script>
+            var engine = new Engine($GODOT_CONFIG);
+            function print(text) {
+                console.log(text);
+            }
+            function printError(text) {
+                console.warn(text);
+            }
+            engine.startGame({ onPrint: print, onPrintError: printError });
+        </script>
+    </body>
+</html>
+

@@ -1,0 +1,82 @@
+[gd_scene load_steps=5 format=3 uid="uid://bfnmgqnqjbj7o"]
+
+[ext_resource type="Script" path="res://scenes/token_builder.gd" id="1_6ick5"]
+[ext_resource type="Texture2D" uid="uid://cbdnjpjhir6el" path="res://icon.png" id="2_ytsc6"]
+[ext_resource type="Script" path="res://scenes/transform_preview.gd" id="3_t6f0m"]
+
+[sub_resource type="ButtonGroup" id="ButtonGroup_jxruq"]
+resource_name = "Sizes"
+
+[node name="TokenBuilder" type="ConfirmationDialog"]
+title = "Setup Sprite"
+size = Vector2i(291, 397)
+visible = true
+script = ExtResource("1_6ick5")
+size_buttons = SubResource("ButtonGroup_jxruq")
+
+[node name="V" type="VBoxContainer" parent="."]
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 283.0
+offset_bottom = 348.0
+
+[node name="H" type="HBoxContainer" parent="V"]
+layout_mode = 2
+alignment = 1
+
+[node name="Label" type="Label" parent="V/H"]
+layout_mode = 2
+text = "Size:"
+
+[node name="Size1" type="Button" parent="V/H"]
+layout_mode = 2
+toggle_mode = true
+button_group = SubResource("ButtonGroup_jxruq")
+text = "½,1"
+metadata/size = 1
+
+[node name="Size2" type="Button" parent="V/H"]
+layout_mode = 2
+toggle_mode = true
+button_group = SubResource("ButtonGroup_jxruq")
+text = "2"
+metadata/size = 2
+
+[node name="Size3" type="Button" parent="V/H"]
+layout_mode = 2
+toggle_mode = true
+button_group = SubResource("ButtonGroup_jxruq")
+text = "3"
+metadata/size = 3
+
+[node name="Size4" type="Button" parent="V/H"]
+layout_mode = 2
+toggle_mode = true
+button_group = SubResource("ButtonGroup_jxruq")
+text = "4"
+metadata/size = 4
+
+[node name="Label" type="Label" parent="V"]
+layout_mode = 2
+text = "Click and drag to align token to grid"
+
+[node name="Sprite" type="TextureRect" parent="V"]
+layout_mode = 2
+texture = ExtResource("2_ytsc6")
+expand_mode = 4
+stretch_mode = 5
+
+[node name="TransformPreview" type="Control" parent="V/Sprite"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("3_t6f0m")
+
+[connection signal="canceled" from="." to="." method="_on_canceled"]
+[connection signal="confirmed" from="." to="." method="_on_confirmed"]
+[connection signal="custom_action" from="." to="." method="_on_custom_action"]
+[connection signal="gui_input" from="V/Sprite/TransformPreview" to="V/Sprite/TransformPreview" method="_on_gui_input" flags=18]
+[connection signal="transform_changed" from="V/Sprite/TransformPreview" to="." method="_on_transform_changed"]
