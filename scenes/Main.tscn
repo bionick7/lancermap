@@ -1,21 +1,21 @@
-[gd_scene load_steps=9 format=3 uid="uid://cnovwftolf4u5"]
+[gd_scene load_steps=9 format=3 uid="uid://dv5xsuahvrhoq"]
 
-[ext_resource type="Script" path="res://scenes/connection_manager.gd" id="1_7v3hv"]
-[ext_resource type="Script" path="res://websocket/WebSocketClient.gd" id="2_mdgww"]
+[ext_resource type="Script" path="res://scenes/networking/connection_manager.gd" id="1_bflg5"]
+[ext_resource type="Script" path="res://scenes/networking/WebSocketClient.gd" id="2_s73ml"]
 [ext_resource type="Script" path="res://scenes/camera.gd" id="3_31bk2"]
 [ext_resource type="Texture2D" uid="uid://egymwrdx05y3" path="res://images/barrack2.png" id="3_rjfat"]
 [ext_resource type="Script" path="res://scenes/hex_grid.gd" id="4_g82ij"]
 [ext_resource type="PackedScene" uid="uid://bfnmgqnqjbj7o" path="res://scenes/token_builder.tscn" id="6_cuohw"]
 [ext_resource type="Script" path="res://scenes/map.gd" id="6_pbsjv"]
 
-[sub_resource type="ButtonGroup" id="ButtonGroup_dulfk"]
+[sub_resource type="ButtonGroup" id="ButtonGroup_4ox3d"]
 resource_name = "Sizes"
 
 [node name="main" type="Node2D"]
-script = ExtResource("1_7v3hv")
+script = ExtResource("1_bflg5")
 
 [node name="Socket" type="Node" parent="."]
-script = ExtResource("2_mdgww")
+script = ExtResource("2_s73ml")
 
 [node name="UI" type="CanvasLayer" parent="."]
 
@@ -177,15 +177,11 @@ script = ExtResource("6_pbsjv")
 visible = false
 ok_button_text = "Confirm"
 cancel_button_text = "Remove"
-size_buttons = SubResource("ButtonGroup_dulfk")
+size_buttons = SubResource("ButtonGroup_4ox3d")
 
-[node name="FileDialog" type="FileDialog" parent="."]
-title = "Open a File"
-size = Vector2i(754, 413)
-ok_button_text = "Open"
-file_mode = 0
-access = 2
-filters = PackedStringArray("*.png", "*.webp", "*.jpg", "*.tga")
+[node name="ExpectingMap" type="AcceptDialog" parent="."]
+size = Vector2i(256, 256)
+dialog_text = "Drop Map here"
 
 [connection signal="value_changed" from="UI/V/PanelContainer/Header/GM/MapLayout/SpinBox" to="HexGrid" method="_on_x0_changed"]
 [connection signal="value_changed" from="UI/V/PanelContainer/Header/GM/MapLayout/SpinBox2" to="HexGrid" method="_on_y0_changed"]

@@ -14,6 +14,11 @@ enum RequestActionCode {
 	
 	GET_TOKENS = 7,
 	KILL_TOKEN = 8,
+	
+	IMAGE_HANDLING_START = 64,
+	IMAGE_HANDLING_PACKET = 65,
+	IMAGE_HANDLING_END = 66,
+	IMAGE_REQUEST = 67,
 }
 
 enum ResponseActionCode {
@@ -23,6 +28,10 @@ enum ResponseActionCode {
 	SEND_TOKEN_LIST = 3,  # followed by array of tokens (little-endian u64)
 	SEND_TOKEN_KILL = 4,  # followed by token id
 	SEND_REG_RESPONSE = 5,  # followed by single byte representing boolean (0 or 1) to confirm REG_AS_GM or REG_AS_PLAYER
+	
+	IMAGE_HANDLING_START = 64,
+	IMAGE_HANDLING_PACKET = 65,
+	IMAGE_HANDLING_END = 66,
 }
 
 @export var handshake_headers: PackedStringArray
@@ -39,6 +48,10 @@ signal token_img_received(token: int, data: PackedByteArray)
 signal token_list_received(tokens: PackedInt64Array)
 signal token_kill_received(token: int)
 signal room_ready(success: bool)
+signal handle_image(action: ResponseActionCode, data: PackedByteArray)
+
+func _ready():
+	NetworkingSingleton.active_socket = self
 
 func _process(dt: float):
 	poll()
@@ -55,15 +68,20 @@ func connect_to_url(url) -> int:
 	last_state = socket.get_ready_state()
 	return OK
 
-func send(roomname: String, action: RequestActionCode, token_id: int=1, payload: Variant={}) -> Error:
-	if roomname == "INVALID":
-		push_error("Called send without opening or joining a room")
+func send(action: RequestActionCode, token_id: int=1, payload: Variant={}) -> Error:
+	if not NetworkingSingleton.is_room_valid() and action != RequestActionCode.IMAGE_REQUEST:
+		#push_error("Called send without opening or joining a room")
 		return FAILED
 	if socket.get_ready_state() != WebSocketPeer.STATE_OPEN:
 		return FAILED
-	var buffer := _encode_msg(roomname, action, token_id, payload)
+	var buffer := _encode_msg(NetworkingSingleton.room, action, token_id, payload)
 	return socket.send(buffer)
-
+	
+func send_raw(payload: PackedByteArray) -> Error:
+	if socket.get_ready_state() != WebSocketPeer.STATE_OPEN:
+		return FAILED
+	return socket.send(payload)
+	
 func handle_message() -> void:
 	if socket.get_available_packet_count() < 1:
 		return
@@ -101,7 +119,10 @@ func handle_message() -> void:
 		ResponseActionCode.SEND_REG_RESPONSE:
 			room_ready.emit(pkt.decode_u8(1) != 0)
 		var other:
-			push_error("Recieved invalid message code: %s" % other)
+			if other in [ResponseActionCode.IMAGE_HANDLING_START, ResponseActionCode.IMAGE_HANDLING_PACKET, ResponseActionCode.IMAGE_HANDLING_END]:
+				handle_image.emit(other, pkt.slice(1))
+			else:
+				push_error("Recieved invalid message code: %s" % other)
 
 func close(code := 1000, reason := "") -> void:
 	socket.close(code, reason)
@@ -135,11 +156,11 @@ func _encode_msg(roomname: String, action: RequestActionCode, token_id: int, pay
 	else:
 		payload_buffer = var_to_bytes(payload)
 	var buffer := PackedByteArray()
+	buffer.append(action)
 	buffer.append_array(roomname_buffer)
-	var pos := roomname_buffer.size()
-	buffer.resize(pos + 10)
+	var pos := roomname_buffer.size() + 1
+	buffer.resize(pos + 9)
 	buffer.encode_u8(pos, 0)
 	buffer.encode_u64(pos+1, token_id)
-	buffer.encode_u8(pos+9, action)
 	buffer.append_array(payload_buffer)
 	return buffer

@@ -40,7 +40,9 @@ func _input(event: InputEvent):
 	elif event is InputEventMouseMotion and dragging:
 		if move_to(get_global_mouse_position()):
 			data_changed.emit(self)
-	
+
+func can_manipulate() -> bool:
+	return is_spawned_by_local or NetworkingSingleton.is_gm
 
 func deserialize(data: Dictionary) -> void:
 	print("Deserialize :", data)
