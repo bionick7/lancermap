@@ -5,7 +5,7 @@ const TOKEN_TEMPLATE = preload("res://scenes/Token.tscn")
 var queued_drops: Array[Texture2D] = []
 
 @onready var socket: WebSocketClient = $Socket
-@onready var map: HexMap = $HexGrid
+@onready var map: HexMap = $HexMap
 @onready var token_builder: TokenBuilder = $TokenBuilder
 
 func _ready():
@@ -38,7 +38,7 @@ func _handle_filedrops(mouse_pos: Vector2) -> void:
 		var token = _spawn_token((randi() << 32) + randi())
 		
 		token_builder.setup(token, texture)
-		token_builder.set_map_parameters(map)
+		token_builder.set_map_parameters()
 		await token_builder.setup_complete
 		if not is_instance_valid(token) or token.is_queued_for_deletion():
 			continue
@@ -75,17 +75,17 @@ func _spawn_token(id: int) -> Token:
 	)
 	res.request_edit.connect(
 		func (x):
-			if not x.can_manipulate_token():
+			if not x.can_manipulate():
 				return
 			token_builder.setup(x)
-			token_builder.set_map_parameters(map)
+			token_builder.set_map_parameters()
 	)
 	#prints(vp.canvas_transform, vp.get_mouse_position(), get_global_mouse_position())
 	return res
 		
 func _remove_token(token: Token, communicate: bool=true):
 	if communicate and token.is_online:
-		if not token.can_manipulate_token():
+		if not token.can_manipulate():
 			return
 		socket.send(WebSocketClient.RequestActionCode.KILL_TOKEN, token.uuid)
 		# Request only
@@ -116,7 +116,7 @@ func _on_token_data_received(token_id: int, data: Variant) -> void:
 func _on_token_imgdata_received(token_id: int, data: PackedByteArray) -> void:
 	print("%s Recieved imgdata: token=%s, data=byte x %s" % [NetworkingSingleton.self_name, token_id, len(data)])
 	if token_id == 0:
-		$HexGrid/Map.download_map()
+		$HexMap/Map.download_map()
 		return
 	var token: Token
 	if token_id not in NetworkingSingleton.tokens:
@@ -144,7 +144,7 @@ func _on_files_dropped(files: PackedStringArray) -> void:
 		files.remove_at(0)
 		var img := Image.load_from_file(map_file)
 		if is_instance_valid(img):
-			$HexGrid/Map.set_map(img)
+			$HexMap/Map.set_map(img)
 		else:
 			push_error("Could not open \"%s\"" % map_file)
 			socket.send(WebSocketClient.RequestActionCode.SET_IMG, 0)
@@ -170,7 +170,7 @@ func _on_host_pressed():
 	
 	var joined_successfull: bool = await socket.room_ready
 	if joined_successfull:
-		$HexGrid/Map.set_map($HexGrid/Map.texture.get_image())
+		$HexMap/Map.set_map($HexMap/Map.texture.get_image())
 
 func _on_join_pressed():
 	NetworkingSingleton.is_gm = false

@@ -19,6 +19,7 @@ config/icon="res://icon.png"
 [autoload]
 
 NetworkingSingleton="*res://scenes/networking/networking_singleton.gd"
+Grid="*res://scenes/grid.gd"
 
 [connections]
 
@@ -26,7 +27,7 @@ socket_url="wss://lancermap.fly.dev:443"
 maps_url="https://lancermap.fly.dev:80/map/"
 test_socket_url="ws://localhost:8080"
 test_maps_url="http://localhost:8081/map/"
-in_testing=true
+in_testing=false
 
 [dotnet]
 

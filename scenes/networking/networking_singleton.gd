@@ -13,3 +13,10 @@ func is_room_valid() -> bool:
 	if room == "INVALID":
 		return false
 	return true
+
+func get_player_tokens() -> Array:
+	var res = []
+	for t in tokens.values():
+		if t.is_player:
+			res.append(t)
+	return res

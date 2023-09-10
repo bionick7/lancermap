@@ -34,9 +34,9 @@ func setup(p_token: Token, raw_texture: Texture2D=null) -> void:
 	transform_preview.sprite_size = texture.get_size()
 	popup_centered()
 
-func set_map_parameters(map: HexMap) -> void:
-	transform_preview.tile_size = map.tile_size
-	transform_preview.is_horizontal = map.is_horizontal
+func set_map_parameters() -> void:
+	transform_preview.tile_size = Grid.tile_size
+	transform_preview.is_horizontal = Grid.is_horizontal
 
 func _on_size_button_pressed(button: BaseButton) -> void:
 	var size: int = button.get_meta("size")

@@ -53,6 +53,6 @@ func download_map(room_name: String="") -> void:
 		var image: Image = await wss_handler.image_received
 		texture = ImageTexture.create_from_image(image)
 
+
 func _should_use_http() -> bool:
-	#return OS.get_name() != "Web"
-	return false
+	return OS.get_name() != "Web"
