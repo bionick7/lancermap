@@ -9,7 +9,7 @@ resource_name = "Sizes"
 
 [node name="TokenBuilder" type="ConfirmationDialog"]
 title = "Setup Sprite"
-size = Vector2i(291, 397)
+size = Vector2i(291, 471)
 visible = true
 script = ExtResource("1_6ick5")
 size_buttons = SubResource("ButtonGroup_jxruq")
@@ -18,7 +18,7 @@ size_buttons = SubResource("ButtonGroup_jxruq")
 offset_left = 8.0
 offset_top = 8.0
 offset_right = 283.0
-offset_bottom = 348.0
+offset_bottom = 422.0
 
 [node name="H" type="HBoxContainer" parent="V"]
 layout_mode = 2
@@ -75,8 +75,27 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("3_t6f0m")
 
+[node name="IsPlayer" type="CheckBox" parent="V"]
+layout_mode = 2
+text = "Is player Character"
+
+[node name="Sensors" type="HBoxContainer" parent="V"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="V/Sensors"]
+layout_mode = 2
+text = "Sensor Range
+"
+
+[node name="SpinBox" type="SpinBox" parent="V/Sensors"]
+layout_mode = 2
+size_flags_horizontal = 10
+allow_greater = true
+
 [connection signal="canceled" from="." to="." method="_on_canceled"]
 [connection signal="confirmed" from="." to="." method="_on_confirmed"]
 [connection signal="custom_action" from="." to="." method="_on_custom_action"]
 [connection signal="gui_input" from="V/Sprite/TransformPreview" to="V/Sprite/TransformPreview" method="_on_gui_input" flags=18]
 [connection signal="transform_changed" from="V/Sprite/TransformPreview" to="." method="_on_transform_changed"]
+[connection signal="toggled" from="V/IsPlayer" to="." method="_on_is_player_toggled"]
+[connection signal="value_changed" from="V/Sensors/SpinBox" to="." method="_on_sensors_changed"]

@@ -87,6 +87,11 @@ func _draw():
 			Color.RED
 		)
 	
+func set_transform(transf: Transform2D) -> void:
+	_transf = transf
+	right = transf.x
+	origin = transf.origin
+	
 func set_token_size(p_size: int) -> void:
 	_token_size = p_size
 	queue_redraw()

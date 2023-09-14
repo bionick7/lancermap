@@ -1,6 +1,7 @@
 #class_name NetworkingSingleton
 extends Node
 
+
 var room: String = "INVALID"
 var tokens: Dictionary = {}
 var is_gm := true

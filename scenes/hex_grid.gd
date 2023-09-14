@@ -10,6 +10,7 @@ enum MeasuringMode {
 	FOG,
 }
 
+
 var UNITY_HEXAGON_VERT := PackedVector2Array([
 	Vector2(.25, 0),
 	Vector2(.75, 0),
@@ -35,7 +36,7 @@ var UNITY_HEXAGON_HORI := PackedVector2Array([
 var active_measure_mode: MeasuringMode
 var from_pos = null
 var measure_size := 1 # temporary
-var draw_alignment_help := true
+var draw_alignment_help := false
 
 @onready var default_font = Control.new().get_theme_default_font()
 @onready var map_shadermat: ShaderMaterial = $Map.material
@@ -44,18 +45,17 @@ signal grid_changed()
 
 func _ready():
 	measure_mode_button_group.pressed.connect(_on_mm_button_pressed)
+	_on_fog_item_selected(%Fog.selected)
 	_on_grid_changed()
 	_on_visible_tiles_changed()
 
 func _input(event: InputEvent):
 	if event is InputEventMouseMotion and active_measure_mode != MeasuringMode.NONE:
-		var hovered_tile := _get_hovered_tile()
-		if active_measure_mode == MeasuringMode.FOG:
-			if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) and hovered_tile not in Grid.blocking_tiles:
-				Grid.blocking_tiles.append(hovered_tile)
-			elif Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) and hovered_tile in Grid.blocking_tiles:
-				Grid.blocking_tiles.erase(hovered_tile)
-			
+		_fog_draw_routine()
+		queue_redraw()
+	
+	if event.is_action_pressed("show_grid_help"):
+		draw_alignment_help = not draw_alignment_help
 		queue_redraw()
 
 func _draw():
@@ -89,22 +89,25 @@ func _draw():
 					i -= 1
 					draw_string(default_font, Grid.eval_tile(t), "%d" % i, HORIZONTAL_ALIGNMENT_CENTER, -1, 16, Color.CORNFLOWER_BLUE)
 			MeasuringMode.LINE:
-				push_error("Line tool not implemented")
+				tiles = Grid.get_line(from_pos, measure_size, to_pos)
 			MeasuringMode.CONE:
-				push_error("Cone tool not implemented")
+				tiles = Grid.get_cone(from_pos, measure_size, to_pos)
 			MeasuringMode.BURST:
 				tiles = Grid.get_burst(from_pos, measure_size, to_pos)
 				
 		for tile in tiles:
 			_draw_tile(tile, Color.CORNFLOWER_BLUE)
-				
 
 func deserialize(data: Dictionary) -> void:
 	Grid.offset = data.offset
 	Grid.tile_size = data.tile_size
 	Grid.is_horizontal = data.is_horizontal
 	Grid.blocking_tiles = data.blocking_tiles
+	Grid.fow_effect = data.fow_effect
+	%Fog.selected = data.fow_effect
+	Grid.on_config_changed.emit(true)
 	queue_redraw()
+	_setup_shader()
 	
 func serialize() -> Dictionary:
 	return {
@@ -112,15 +115,12 @@ func serialize() -> Dictionary:
 		tile_size = Grid.tile_size,
 		is_horizontal = Grid.is_horizontal,
 		blocking_tiles = Grid.blocking_tiles,
+		fow_effect = Grid.fow_effect
 	}
 	
 func handle_mouse_button(event: InputEventMouseButton, token: Token) -> void:
+	_fog_draw_routine()
 	if event.pressed and active_measure_mode == MeasuringMode.FOG:
-		var hovered_tile := _get_hovered_tile()
-		if event.button_index == MOUSE_BUTTON_LEFT and hovered_tile not in Grid.blocking_tiles:
-			Grid.blocking_tiles.append(hovered_tile)
-		elif event.button_index == MOUSE_BUTTON_RIGHT and hovered_tile in Grid.blocking_tiles:
-			Grid.blocking_tiles.erase(hovered_tile)
 		return
 	if event.pressed:
 		if token == null:
@@ -131,6 +131,21 @@ func handle_mouse_button(event: InputEventMouseButton, token: Token) -> void:
 			from_pos = token.tile
 	else:
 		from_pos = null
+	
+func update_map_visibility() -> void:
+	_on_visible_tiles_changed()
+	
+func _fog_draw_routine() -> void:
+	var hovered_tile := _get_hovered_tile()
+	if active_measure_mode == MeasuringMode.FOG:
+		if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) and hovered_tile not in Grid.blocking_tiles:
+			Grid.blocking_tiles.append(hovered_tile)
+			_on_grid_changed()
+		elif Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) and hovered_tile in Grid.blocking_tiles:
+			Grid.blocking_tiles.erase(hovered_tile)
+			_on_grid_changed()
+	for t in NetworkingSingleton.tokens.values():
+		t.visible = t.is_token_visible()
 	
 func _make_hex(center: Vector2, size: Vector2) -> PackedVector2Array:
 	var res: PackedVector2Array
@@ -153,23 +168,35 @@ func _get_hovered_tile() -> Vector2i:
 	
 func _on_grid_changed() -> void:
 	queue_redraw()
-	grid_changed.emit()
+	Grid.on_config_changed.emit(false)
+	_setup_shader()
+
+func _setup_shader() -> void:
 	map_shadermat.set_shader_parameter("tile_size", Grid.tile_size)
 	map_shadermat.set_shader_parameter("offset", Grid.offset)
 	map_shadermat.set_shader_parameter("is_horizontal", Grid.is_horizontal)
+	if Grid.fow_effect in [Grid.FOWEffect.HideAll, Grid.FOWEffect.NoSensors] and not NetworkingSingleton.is_gm:
+		map_shadermat.set_shader_parameter("fow_color", Color(0, 0, 0, 1.0))
+	else:
+		map_shadermat.set_shader_parameter("fow_color", Color(0, 0, 0, 0.2))
 
 func _on_visible_tiles_changed() -> void:
-	var visible_tiles := []
+	Grid.update_visible_tiles()
+	var n_tiles := len(Grid.visible_tiles)
+	
 	var visible_tiles_as_int_arr := PackedInt32Array()
-	for p in NetworkingSingleton.get_player_tokens():
-		for tile in Grid.get_sensors(p.tile, p.size, p.sensor_range):
-			if tile not in visible_tiles:
-				visible_tiles.append(tile)
-				visible_tiles_as_int_arr.append(tile.x)
-				visible_tiles_as_int_arr.append(tile.y)
+	visible_tiles_as_int_arr.resize(n_tiles*2)
+	for i in range(n_tiles):
+		var tile: Vector2i = Grid.visible_tiles[i]
+		visible_tiles_as_int_arr[i*2] = tile.x
+		visible_tiles_as_int_arr[i*2 + 1] = tile.y
+	
+	for token in NetworkingSingleton.tokens.values():
+		if not token.is_player:
+			token.visible = token.is_token_visible()
 	
 	map_shadermat.set_shader_parameter("visible", visible_tiles_as_int_arr)
-	map_shadermat.set_shader_parameter("visible_size", len(visible_tiles))
+	map_shadermat.set_shader_parameter("visible_size", n_tiles)
 
 func _on_x0_changed(value: float) -> void:
 	Grid.offset.x = value
@@ -187,9 +214,13 @@ func _on_sizey_changed(value: float) -> void:
 	Grid.tile_size.y = value
 	_on_grid_changed()
 
-func _on_horizontal_changed(button_pressed: bool):
+func _on_horizontal_changed(button_pressed: bool) -> void:
 	Grid.is_horizontal = button_pressed
 	_on_grid_changed()
 
-func _on_mm_button_pressed(button: Button):
+func _on_mm_button_pressed(button: Button) -> void:
 	active_measure_mode = button.get_meta("mode", 0)
+
+func _on_fog_item_selected(index: Grid.FOWEffect) -> void:
+	Grid.fow_effect = index
+	_on_grid_changed()

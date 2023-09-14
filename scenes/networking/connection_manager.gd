@@ -16,7 +16,7 @@ func _ready():
 	socket.token_list_received.connect(_on_token_list_received)
 	socket.token_kill_received.connect(_on_token_kill_received)
 	
-	map.grid_changed.connect(_update_grid)
+	Grid.on_config_changed.connect(_update_grid)
 	get_viewport().files_dropped.connect(_on_files_dropped)
 	token_builder.request_remove.connect(_remove_token.bind(true))
 		
@@ -39,7 +39,9 @@ func _handle_filedrops(mouse_pos: Vector2) -> void:
 		
 		token_builder.setup(token, texture)
 		token_builder.set_map_parameters()
+		
 		await token_builder.setup_complete
+				
 		if not is_instance_valid(token) or token.is_queued_for_deletion():
 			continue
 		if not token_builder.is_confirmed:
@@ -72,6 +74,8 @@ func _spawn_token(id: int) -> Token:
 		func(x): 
 			if NetworkingSingleton.is_room_valid():
 				socket.send(WebSocketClient.RequestActionCode.SET_DATA, x.uuid, x.serialize())
+			if x.is_player:
+				map.update_map_visibility()
 	)
 	res.request_edit.connect(
 		func (x):
@@ -83,7 +87,7 @@ func _spawn_token(id: int) -> Token:
 	#prints(vp.canvas_transform, vp.get_mouse_position(), get_global_mouse_position())
 	return res
 		
-func _remove_token(token: Token, communicate: bool=true):
+func _remove_token(token: Token, communicate: bool=true) -> void:
 	if communicate and token.is_online:
 		if not token.can_manipulate():
 			return
@@ -93,10 +97,11 @@ func _remove_token(token: Token, communicate: bool=true):
 		token.queue_free()
 		NetworkingSingleton.tokens.erase(token.uuid)
 		
-func _update_grid():
+func _update_grid(from_remote: bool) -> void:
+	if from_remote: return 
 	socket.send(WebSocketClient.RequestActionCode.SET_DATA, 0, map.serialize())
 	
-func _update_map_image():
+func _update_map_image() -> void:
 	socket.send(WebSocketClient.RequestActionCode.SET_IMG, 0)
 	
 func _on_token_data_received(token_id: int, data: Variant) -> void:
@@ -112,6 +117,8 @@ func _on_token_data_received(token_id: int, data: Variant) -> void:
 	else:
 		token = NetworkingSingleton.tokens[token_id]
 	token.deserialize(data)
+	if token.is_player:
+		map.update_map_visibility()
 	
 func _on_token_imgdata_received(token_id: int, data: PackedByteArray) -> void:
 	print("%s Recieved imgdata: token=%s, data=byte x %s" % [NetworkingSingleton.self_name, token_id, len(data)])
@@ -135,6 +142,9 @@ func _on_token_list_received(tokens: PackedInt64Array) -> void:
 
 func _on_token_kill_received(token_id: int) -> void:
 	print("%s Recieved token kill %s" % [NetworkingSingleton.self_name, token_id])
+	if token_id not in NetworkingSingleton.tokens:
+		push_error("Tried to remove unexisting token %X" % token_id)
+		return
 	_remove_token(NetworkingSingleton.tokens[token_id], false)
 
 func _on_files_dropped(files: PackedStringArray) -> void:
@@ -159,7 +169,7 @@ func _on_host_pressed():
 	NetworkingSingleton.is_gm = true
 	NetworkingSingleton.room = %RoomName.text
 	socket.send(WebSocketClient.RequestActionCode.REG_AS_GM)
-	_update_grid()
+	_update_grid(false)
 	_update_map_image()
 	%ConnectionStatus.text = "Playing as Gm"
 	

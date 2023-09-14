@@ -28,8 +28,17 @@ func setup(p_token: Token, raw_texture: Texture2D=null) -> void:
 		token.set_sprite(texture)
 	else:
 		texture = token.get_sprite()
-		
-	_on_transform_changed(transform_preview._transf)
+	
+	transform_preview.set_transform(token.get_add_transform().affine_inverse())
+	#transform_preview.set_transform(Transform2D.IDENTITY.scaled(Vector2.ONE* 1000))
+	#_on_transform_changed(transform_preview._transf)
+	
+	var relevant_button = size_buttons.get_buttons().filter(func(x): return x.get_meta("size", 0) == token.size).pop_back()
+	if relevant_button != null:
+		relevant_button.button_pressed = true
+	#transform_preview.set_token_size(token.size)
+	$V/IsPlayer.button_pressed = token.is_player
+	$V/Sensors/SpinBox.value = token.sensor_range
 	$V/Sprite.texture = texture
 	transform_preview.sprite_size = texture.get_size()
 	popup_centered()
@@ -62,3 +71,10 @@ func _on_custom_action(action: String) -> void:
 	if action == "kill" and is_instance_valid(token):
 		request_remove.emit(token)
 		hide()
+
+func _on_is_player_toggled(button_pressed: bool) -> void:
+	$V/Sensors.visible = button_pressed
+	token.is_player = button_pressed
+
+func _on_sensors_changed(value: int) -> void:
+	token.sensor_range = value

@@ -26,6 +26,8 @@ uniform bool is_horizontal;
 uniform ivec2 visible[MAX_VISIBLE_TILES];
 uniform int visible_size = 0;
 
+uniform vec4 fow_color: source_color = vec4(0, 0, 0, 0.5);
+
 int mod2(int x) {
 	return abs(x) % 2;  // Not sure how it handles negative integers
 }
@@ -94,10 +96,12 @@ void fragment() {
 		}
 	}
 	
+	vec4 sampled = texture(TEXTURE, UV);
 	if (is_visible){
-		COLOR = texture(TEXTURE, UV);
+		COLOR = sampled;
 	} else {
-		COLOR = mix(texture(TEXTURE, UV), vec4(0,0,0,1), 1.0);
+		COLOR.rgb = mix(sampled.rgb, fow_color.rgb, fow_color.a);
+		COLOR.a = sampled.a;
 	}
 	
 	//COLOR.rg = fract(vec2(_get_tile_estimate(pixel, config)) / 3.0);

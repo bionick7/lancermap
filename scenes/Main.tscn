@@ -18,8 +18,9 @@ shader_parameter/offset = Vector2(-18, 4)
 shader_parameter/is_horizontal = true
 shader_parameter/visible = PackedInt32Array(0, 0, 2, 1)
 shader_parameter/visible_size = 2
+shader_parameter/fow_color = Color(0, 0, 0, 0.5)
 
-[sub_resource type="ButtonGroup" id="ButtonGroup_px8lj"]
+[sub_resource type="ButtonGroup" id="ButtonGroup_m7c30"]
 resource_name = "Sizes"
 
 [node name="main" type="Node2D"]
@@ -94,15 +95,19 @@ size_flags_vertical = 0
 text = "Horizontal"
 
 [node name="Fog" type="OptionButton" parent="UI/V/PanelContainer/Header/GM"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 0
-item_count = 3
+item_count = 4
+selected = 2
 popup/item_0/text = "Transparent"
 popup/item_0/id = 0
 popup/item_1/text = "Show Map"
 popup/item_1/id = 1
 popup/item_2/text = "Hide All"
 popup/item_2/id = 2
+popup/item_3/text = "No Sensors"
+popup/item_3/id = 3
 
 [node name="SetMap" type="Button" parent="UI/V/PanelContainer/Header/GM"]
 layout_mode = 2
@@ -218,7 +223,7 @@ script = ExtResource("6_pbsjv")
 visible = false
 ok_button_text = "Confirm"
 cancel_button_text = "Remove"
-size_buttons = SubResource("ButtonGroup_px8lj")
+size_buttons = SubResource("ButtonGroup_m7c30")
 
 [node name="ExpectingMap" type="AcceptDialog" parent="."]
 size = Vector2i(256, 256)
@@ -234,6 +239,7 @@ camera = NodePath("../Camera2D")
 [connection signal="value_changed" from="UI/V/PanelContainer/Header/GM/MapLayout/SpinBox3" to="HexMap" method="_on_sizex_changed"]
 [connection signal="value_changed" from="UI/V/PanelContainer/Header/GM/MapLayout/SpinBox4" to="HexMap" method="_on_sizey_changed"]
 [connection signal="toggled" from="UI/V/PanelContainer/Header/GM/HorizontalGrid" to="HexMap" method="_on_horizontal_changed"]
+[connection signal="item_selected" from="UI/V/PanelContainer/Header/GM/Fog" to="HexMap" method="_on_fog_item_selected"]
 [connection signal="pressed" from="UI/V/PanelContainer/Header/GM/SetMap" to="." method="_on_set_map_pressed"]
 [connection signal="pressed" from="UI/V/PanelContainer/Header/GM/UpdateVissbility" to="HexMap" method="_on_visible_tiles_changed"]
 [connection signal="pressed" from="UI/V/PanelContainer/Header/General/Host" to="." method="_on_host_pressed"]
