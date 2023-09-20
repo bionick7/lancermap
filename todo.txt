@@ -1,5 +1,0 @@
-update visibility mode across clients
-logging system
-connect player uuid to ip
-close room after x time
-host directly
