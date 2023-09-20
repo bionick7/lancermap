@@ -1,4 +1,6 @@
 .godot/*
 .import/*
-builds/*
+builds/windows/*
+builds/linux/*
+builds/macos/*
 *.import

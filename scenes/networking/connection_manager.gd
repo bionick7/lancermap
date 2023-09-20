@@ -98,7 +98,7 @@ func _remove_token(token: Token, communicate: bool=true) -> void:
 		NetworkingSingleton.tokens.erase(token.uuid)
 		
 func _update_grid(from_remote: bool) -> void:
-	if from_remote: return 
+	if from_remote: return
 	socket.send(WebSocketClient.RequestActionCode.SET_DATA, 0, map.serialize())
 	
 func _update_map_image() -> void:

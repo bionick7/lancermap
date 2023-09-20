@@ -10,7 +10,6 @@ enum MeasuringMode {
 	FOG,
 }
 
-
 var UNITY_HEXAGON_VERT := PackedVector2Array([
 	Vector2(.25, 0),
 	Vector2(.75, 0),
@@ -115,7 +114,7 @@ func serialize() -> Dictionary:
 		tile_size = Grid.tile_size,
 		is_horizontal = Grid.is_horizontal,
 		blocking_tiles = Grid.blocking_tiles,
-		fow_effect = Grid.fow_effect
+		fow_effect = Grid.fow_effect,
 	}
 	
 func handle_mouse_button(event: InputEventMouseButton, token: Token) -> void:

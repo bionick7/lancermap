@@ -33,10 +33,6 @@ in_testing=false
 
 project/assembly_name="LancerMap"
 
-[editor_plugins]
-
-enabled=PackedStringArray("res://addons/coi_serviceworker/plugin.cfg")
-
 [input]
 
 camera={
