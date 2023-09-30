@@ -1,5 +1,37 @@
-update visibility mode across clients
-logging system
-connect player uuid to ip
-close room after x time
-host directly
+= Features
+
+100% - update visibility mode across clients
+100% - logging system
+100% - connect player uuid to ip
+  0% - [Server side] close room after x time
+100% - host directly
+100% - add base visibility
+  0% - better token alignment
+100% - Hide unnecassary controls
+100% - Download save
+
+(longer, qualitative goals)
+visibility update can get unefficient af
+UI improvements
+
+= Bugs
+
+Firefox crash when uploading a token as gm
+[Not replicated]
+
+Always-visible tiles have no effect at all
+=> Update visibility also has no effect
+[Relicatable]
+[Fix implemented]
+
+Switching map visibility has no effect on player's client side
+=> Player client map visibility does switch succesfully according to UI
+[Relicatable]
+[Fixed]
+
+Changing the map after player joins leads to player failing the download
+=> Simple Workaround
+[Relicatable]
+[Not replicatable anymore (accidental fix?)]
+
+!! Changes breaking w.r.t hosted version !!

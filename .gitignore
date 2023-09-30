@@ -3,4 +3,5 @@
 builds/windows/*
 builds/linux/*
 builds/macos/*
+builds/*
 *.import

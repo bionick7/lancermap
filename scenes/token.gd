@@ -29,6 +29,7 @@ func _ready():
 	visible = is_token_visible()
 	
 func _draw():
+	return
 	draw_string(default_font, Vector2.ZERO, "%d" % uuid)
 	draw_circle(Vector2(0, -8), 5, Color.GREEN if is_online else Color.RED)
 

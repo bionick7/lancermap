@@ -1,26 +1,29 @@
-[gd_scene load_steps=13 format=3 uid="uid://dv5xsuahvrhoq"]
+[gd_scene load_steps=16 format=3 uid="uid://dv5xsuahvrhoq"]
 
 [ext_resource type="Script" path="res://scenes/networking/connection_manager.gd" id="1_bflg5"]
 [ext_resource type="Script" path="res://scenes/networking/WebSocketClient.gd" id="2_s73ml"]
 [ext_resource type="Script" path="res://scenes/camera.gd" id="3_31bk2"]
 [ext_resource type="ButtonGroup" uid="uid://ddgglsijly4yd" path="res://misc/measure_mode_button_group.tres" id="3_424di"]
+[ext_resource type="Theme" uid="uid://ljdjbrdcn3fr" path="res://UI/ui_theme.tres" id="3_o7wha"]
 [ext_resource type="Script" path="res://scenes/hex_grid.gd" id="4_g82ij"]
+[ext_resource type="FontFile" uid="uid://8fgw5ees0loc" path="res://UI/compcon.ttf" id="4_vdcbq"]
+[ext_resource type="Script" path="res://scenes/Tunicodelabel.gd" id="5_1grd2"]
 [ext_resource type="PackedScene" uid="uid://bfnmgqnqjbj7o" path="res://scenes/token_builder.tscn" id="6_cuohw"]
 [ext_resource type="Script" path="res://scenes/map.gd" id="6_pbsjv"]
 [ext_resource type="Shader" path="res://map.gdshader" id="6_vgcu5"]
-[ext_resource type="Texture2D" uid="uid://cbdnjpjhir6el" path="res://icon.png" id="7_1tjdr"]
 [ext_resource type="Script" path="res://scenes/ClickHandler.gd" id="8_81gb3"]
+[ext_resource type="Texture2D" uid="uid://duiqhaql43afa" path="res://images/Nature.png" id="10_gvlb4"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_3an0l"]
 shader = ExtResource("6_vgcu5")
 shader_parameter/tile_size = Vector2(64, 64)
 shader_parameter/offset = Vector2(-18, 4)
 shader_parameter/is_horizontal = true
-shader_parameter/visible = PackedInt32Array(0, 0, 2, 1)
-shader_parameter/visible_size = 2
+shader_parameter/visible = PackedInt32Array()
+shader_parameter/visible_size = 0
 shader_parameter/fow_color = Color(0, 0, 0, 0.5)
 
-[sub_resource type="ButtonGroup" id="ButtonGroup_8o6if"]
+[sub_resource type="ButtonGroup" id="ButtonGroup_sdfx2"]
 resource_name = "Sizes"
 
 [node name="main" type="Node2D"]
@@ -37,64 +40,86 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("3_o7wha")
 
 [node name="PanelContainer" type="PanelContainer" parent="UI/V"]
 layout_mode = 2
 
 [node name="Header" type="HBoxContainer" parent="UI/V/PanelContainer"]
 layout_mode = 2
+alignment = 2
 
-[node name="GM" type="HBoxContainer" parent="UI/V/PanelContainer/Header"]
+[node name="GMSpecific" type="HBoxContainer" parent="UI/V/PanelContainer/Header"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="MapLayout" type="GridContainer" parent="UI/V/PanelContainer/Header/GM"]
+[node name="MapLayout" type="GridContainer" parent="UI/V/PanelContainer/Header/GMSpecific"]
 layout_mode = 2
 theme_override_constants/h_separation = 27
-columns = 4
+columns = 5
 
-[node name="X" type="Label" parent="UI/V/PanelContainer/Header/GM/MapLayout"]
+[node name="X" type="Label" parent="UI/V/PanelContainer/Header/GMSpecific/MapLayout"]
 layout_mode = 2
-text = "x"
+text = "  X"
 
-[node name="SpinBox" type="SpinBox" parent="UI/V/PanelContainer/Header/GM/MapLayout"]
-layout_mode = 2
-allow_greater = true
-allow_lesser = true
-
-[node name="Y" type="Label" parent="UI/V/PanelContainer/Header/GM/MapLayout"]
-layout_mode = 2
-text = "y"
-
-[node name="SpinBox2" type="SpinBox" parent="UI/V/PanelContainer/Header/GM/MapLayout"]
+[node name="XInp" type="SpinBox" parent="UI/V/PanelContainer/Header/GMSpecific/MapLayout"]
+unique_name_in_owner = true
 layout_mode = 2
 allow_greater = true
 allow_lesser = true
 
-[node name="SX" type="Label" parent="UI/V/PanelContainer/Header/GM/MapLayout"]
+[node name="Y" type="Label" parent="UI/V/PanelContainer/Header/GMSpecific/MapLayout"]
 layout_mode = 2
-text = "width"
+text = "Y"
 
-[node name="SpinBox3" type="SpinBox" parent="UI/V/PanelContainer/Header/GM/MapLayout"]
+[node name="YInp" type="SpinBox" parent="UI/V/PanelContainer/Header/GMSpecific/MapLayout"]
+unique_name_in_owner = true
 layout_mode = 2
-value = 64.0
 allow_greater = true
+allow_lesser = true
 
-[node name="SY" type="Label" parent="UI/V/PanelContainer/Header/GM/MapLayout"]
-layout_mode = 2
-text = "height"
-
-[node name="SpinBox4" type="SpinBox" parent="UI/V/PanelContainer/Header/GM/MapLayout"]
-layout_mode = 2
-value = 64.0
-allow_greater = true
-
-[node name="HorizontalGrid" type="CheckButton" parent="UI/V/PanelContainer/Header/GM"]
+[node name="HorizontalGrid" type="CheckButton" parent="UI/V/PanelContainer/Header/GMSpecific/MapLayout"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 0
+button_pressed = true
 text = "Horizontal"
 
-[node name="Fog" type="OptionButton" parent="UI/V/PanelContainer/Header/GM"]
+[node name="SX" type="Label" parent="UI/V/PanelContainer/Header/GMSpecific/MapLayout"]
+layout_mode = 2
+text = "  Width"
+
+[node name="WidthInp" type="SpinBox" parent="UI/V/PanelContainer/Header/GMSpecific/MapLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+value = 75.0
+allow_greater = true
+
+[node name="SY" type="Label" parent="UI/V/PanelContainer/Header/GMSpecific/MapLayout"]
+layout_mode = 2
+text = "Height"
+
+[node name="HeightInp" type="SpinBox" parent="UI/V/PanelContainer/Header/GMSpecific/MapLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+value = 89.0
+allow_greater = true
+
+[node name="SetMap" type="Button" parent="UI/V/PanelContainer/Header/GMSpecific/MapLayout"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "Set Background"
+
+[node name="ColorRect" type="ColorRect" parent="UI/V/PanelContainer/Header/GMSpecific"]
+custom_minimum_size = Vector2(2, 0)
+layout_mode = 2
+color = Color(0.811765, 0.290196, 0.290196, 1)
+
+[node name="Other" type="GridContainer" parent="UI/V/PanelContainer/Header/GMSpecific"]
+layout_mode = 2
+
+[node name="Fog" type="OptionButton" parent="UI/V/PanelContainer/Header/GMSpecific/Other"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 0
@@ -109,19 +134,18 @@ popup/item_2/id = 2
 popup/item_3/text = "No Sensors"
 popup/item_3/id = 3
 
-[node name="SetMap" type="Button" parent="UI/V/PanelContainer/Header/GM"]
+[node name="SaveCurrent" type="Button" parent="UI/V/PanelContainer/Header/GMSpecific/Other"]
 layout_mode = 2
-size_flags_vertical = 0
-text = "Add Map"
-
-[node name="UpdateVissbility" type="Button" parent="UI/V/PanelContainer/Header/GM"]
-layout_mode = 2
-text = "Update visibility"
+text = "Save current"
 
 [node name="General" type="GridContainer" parent="UI/V/PanelContainer/Header"]
 layout_mode = 2
 size_flags_vertical = 0
-columns = 2
+columns = 3
+
+[node name="UpdateVissbility" type="Button" parent="UI/V/PanelContainer/Header/General"]
+layout_mode = 2
+text = "Update visibility"
 
 [node name="RoomName" type="LineEdit" parent="UI/V/PanelContainer/Header/General"]
 unique_name_in_owner = true
@@ -135,6 +159,9 @@ caret_blink_interval = 0.5
 [node name="Host" type="Button" parent="UI/V/PanelContainer/Header/General"]
 layout_mode = 2
 text = "Host"
+
+[node name="Control" type="Control" parent="UI/V/PanelContainer/Header/General"]
+layout_mode = 2
 
 [node name="ConnectionStatus" type="Label" parent="UI/V/PanelContainer/Header/General"]
 unique_name_in_owner = true
@@ -161,47 +188,90 @@ layout_mode = 2
 
 [node name="None" type="Button" parent="UI/V/H/Margins/V"]
 layout_mode = 2
+tooltip_text = "Select"
+theme_override_font_sizes/font_size = 24
 toggle_mode = true
+button_pressed = true
 button_group = ExtResource("3_424di")
 text = "[]"
 metadata/mode = 0
 
 [node name="Measure" type="Button" parent="UI/V/H/Margins/V"]
 layout_mode = 2
+tooltip_text = "Distance"
+theme_override_fonts/font = ExtResource("4_vdcbq")
+theme_override_font_sizes/font_size = 32
 toggle_mode = true
 button_group = ExtResource("3_424di")
-text = "Measure"
+text = ""
+script = ExtResource("5_1grd2")
+codepoint = 59703
 metadata/mode = 1
 
 [node name="DrawLine" type="Button" parent="UI/V/H/Margins/V"]
 layout_mode = 2
+tooltip_text = "Line"
+theme_override_fonts/font = ExtResource("4_vdcbq")
+theme_override_font_sizes/font_size = 32
+disabled = true
 toggle_mode = true
 button_group = ExtResource("3_424di")
-text = "Line"
+text = ""
+script = ExtResource("5_1grd2")
+codepoint = 59706
 metadata/mode = 2
 
 [node name="DrawCone" type="Button" parent="UI/V/H/Margins/V"]
 layout_mode = 2
+tooltip_text = "Cone"
+theme_override_fonts/font = ExtResource("4_vdcbq")
+theme_override_font_sizes/font_size = 32
+disabled = true
 toggle_mode = true
 button_group = ExtResource("3_424di")
-text = "Cone"
+text = ""
+script = ExtResource("5_1grd2")
+codepoint = 59705
 metadata/mode = 3
 
 [node name="DrawBurst" type="Button" parent="UI/V/H/Margins/V"]
 layout_mode = 2
+tooltip_text = "Burst"
+theme_override_fonts/font = ExtResource("4_vdcbq")
+theme_override_font_sizes/font_size = 32
 toggle_mode = true
 button_group = ExtResource("3_424di")
-text = "Burst"
+text = ""
+script = ExtResource("5_1grd2")
+codepoint = 59704
 metadata/mode = 4
 
 [node name="DrawFog" type="Button" parent="UI/V/H/Margins/V"]
 layout_mode = 2
+tooltip_text = "Draw blocking tiles"
+theme_override_fonts/font = ExtResource("4_vdcbq")
+theme_override_font_sizes/font_size = 32
 toggle_mode = true
 button_group = ExtResource("3_424di")
-text = "Fog"
+text = ""
+script = ExtResource("5_1grd2")
+codepoint = 59664
 metadata/mode = 5
 
-[node name="Control" type="Control" parent="UI/V/H"]
+[node name="DrawVisible" type="Button" parent="UI/V/H/Margins/V"]
+layout_mode = 2
+tooltip_text = "Draw always visible"
+theme_override_fonts/font = ExtResource("4_vdcbq")
+theme_override_font_sizes/font_size = 32
+toggle_mode = true
+button_group = ExtResource("3_424di")
+text = ""
+script = ExtResource("5_1grd2")
+codepoint = 59680
+metadata/mode = 6
+
+[node name="MouseCaptureArea" type="Control" parent="UI/V/H"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
@@ -216,17 +286,19 @@ measure_mode_button_group = ExtResource("3_424di")
 [node name="Map" type="Sprite2D" parent="HexMap"]
 z_index = -10
 material = SubResource("ShaderMaterial_3an0l")
-texture = ExtResource("7_1tjdr")
+texture = ExtResource("10_gvlb4")
 script = ExtResource("6_pbsjv")
 
 [node name="TokenBuilder" parent="." instance=ExtResource("6_cuohw")]
 visible = false
 ok_button_text = "Confirm"
 cancel_button_text = "Remove"
-size_buttons = SubResource("ButtonGroup_8o6if")
+size_buttons = SubResource("ButtonGroup_sdfx2")
 
 [node name="ExpectingMap" type="AcceptDialog" parent="."]
+title = "Expecting map"
 size = Vector2i(256, 256)
+theme = ExtResource("3_o7wha")
 dialog_text = "Drop Map here"
 
 [node name="ClickHandler" type="Node2D" parent="." node_paths=PackedStringArray("hexgrid", "camera")]
@@ -234,13 +306,14 @@ script = ExtResource("8_81gb3")
 hexgrid = NodePath("../HexMap")
 camera = NodePath("../Camera2D")
 
-[connection signal="value_changed" from="UI/V/PanelContainer/Header/GM/MapLayout/SpinBox" to="HexMap" method="_on_x0_changed"]
-[connection signal="value_changed" from="UI/V/PanelContainer/Header/GM/MapLayout/SpinBox2" to="HexMap" method="_on_y0_changed"]
-[connection signal="value_changed" from="UI/V/PanelContainer/Header/GM/MapLayout/SpinBox3" to="HexMap" method="_on_sizex_changed"]
-[connection signal="value_changed" from="UI/V/PanelContainer/Header/GM/MapLayout/SpinBox4" to="HexMap" method="_on_sizey_changed"]
-[connection signal="toggled" from="UI/V/PanelContainer/Header/GM/HorizontalGrid" to="HexMap" method="_on_horizontal_changed"]
-[connection signal="item_selected" from="UI/V/PanelContainer/Header/GM/Fog" to="HexMap" method="_on_fog_item_selected"]
-[connection signal="pressed" from="UI/V/PanelContainer/Header/GM/SetMap" to="." method="_on_set_map_pressed"]
-[connection signal="pressed" from="UI/V/PanelContainer/Header/GM/UpdateVissbility" to="HexMap" method="_on_visible_tiles_changed"]
+[connection signal="value_changed" from="UI/V/PanelContainer/Header/GMSpecific/MapLayout/XInp" to="HexMap" method="_on_x0_changed"]
+[connection signal="value_changed" from="UI/V/PanelContainer/Header/GMSpecific/MapLayout/YInp" to="HexMap" method="_on_y0_changed"]
+[connection signal="toggled" from="UI/V/PanelContainer/Header/GMSpecific/MapLayout/HorizontalGrid" to="HexMap" method="_on_horizontal_changed"]
+[connection signal="value_changed" from="UI/V/PanelContainer/Header/GMSpecific/MapLayout/WidthInp" to="HexMap" method="_on_sizex_changed"]
+[connection signal="value_changed" from="UI/V/PanelContainer/Header/GMSpecific/MapLayout/HeightInp" to="HexMap" method="_on_sizey_changed"]
+[connection signal="pressed" from="UI/V/PanelContainer/Header/GMSpecific/MapLayout/SetMap" to="." method="_on_set_map_pressed"]
+[connection signal="item_selected" from="UI/V/PanelContainer/Header/GMSpecific/Other/Fog" to="HexMap" method="_on_fog_item_selected"]
+[connection signal="pressed" from="UI/V/PanelContainer/Header/GMSpecific/Other/SaveCurrent" to="." method="download_save"]
+[connection signal="pressed" from="UI/V/PanelContainer/Header/General/UpdateVissbility" to="HexMap" method="_on_visible_tiles_changed"]
 [connection signal="pressed" from="UI/V/PanelContainer/Header/General/Host" to="." method="_on_host_pressed"]
 [connection signal="pressed" from="UI/V/PanelContainer/Header/General/Join" to="." method="_on_join_pressed"]

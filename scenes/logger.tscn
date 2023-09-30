@@ -1,0 +1,30 @@
+[gd_scene load_steps=2 format=3 uid="uid://bga3p5yt6yjus"]
+
+[ext_resource type="Script" path="res://scenes/logger.gd" id="1_jinxm"]
+
+[node name="logger" type="Node"]
+script = ExtResource("1_jinxm")
+
+[node name="Window" type="Window" parent="."]
+size = Vector2i(300, 300)
+
+[node name="V" type="VBoxContainer" parent="Window"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Window/V"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="V" type="VBoxContainer" parent="Window/V/ScrollContainer"]
+layout_mode = 2
+
+[node name="Save" type="Button" parent="Window/V"]
+layout_mode = 2
+text = "Save"
+
+[connection signal="close_requested" from="Window" to="." method="_on_window_close_requested"]
+[connection signal="pressed" from="Window/V/Save" to="." method="_on_save_pressed"]

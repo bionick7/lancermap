@@ -59,6 +59,9 @@ func _process(dt: float):
 func _exit_tree():
 	close(1001, "Application closed")
 
+func is_socket_connected() -> bool:
+	return socket.get_ready_state() == WebSocketPeer.STATE_OPEN
+
 func connect_to_url(url) -> int:
 	socket.supported_protocols = supported_protocols
 	socket.handshake_headers = handshake_headers
@@ -95,7 +98,7 @@ func handle_message() -> void:
 		ResponseActionCode.SEND_ERROR:
 			var message := pkt.slice(1).get_string_from_utf8()
 			JavaScriptBridge.eval("alert(\"" + message.json_escape() + "\");")
-			push_error(message)
+			Logger.log_error(message)
 		ResponseActionCode.SEND_DATA:
 			if pkt.decode_u8(9) == 1:
 				token_img_received.emit(
@@ -122,7 +125,7 @@ func handle_message() -> void:
 			if other in [ResponseActionCode.IMAGE_HANDLING_START, ResponseActionCode.IMAGE_HANDLING_PACKET, ResponseActionCode.IMAGE_HANDLING_END]:
 				handle_image.emit(other, pkt.slice(1))
 			else:
-				push_error("Recieved invalid message code: %s" % other)
+				Logger.log_error("Recieved invalid message code: %s" % other)
 
 func close(code := 1000, reason := "") -> void:
 	socket.close(code, reason)

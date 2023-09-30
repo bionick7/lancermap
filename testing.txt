@@ -1,0 +1,21 @@
+A hosts
+B connects
+B disconnects
+B reconnects
+A loads map
+A aligns map
+A draws visibility
+=> B should see
+A draws blocking
+A changes visibility to hide
+=> B should see accordingly
+A draws blocking
+=> should update @ B
+A adds 1 tokens
+B adds 1 token
+B tries to remove foreign token token
+A removes own and foreign token
+=> check error log
+B disconnects
+B reconnects
+=> nothing should change

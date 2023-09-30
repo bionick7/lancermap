@@ -14,7 +14,10 @@ enum FOWEffect {
 	NoSensors,
 }
 
+#Drawn
+var always_visible_tiles: Array = []
 var blocking_tiles: Array = []
+# Updated
 var visible_tiles: Array = []
 
 var NEIGHBOUR_LOOKUP := PackedInt32Array([
@@ -29,8 +32,8 @@ var NEIGHBOUR_LOOKUP := PackedInt32Array([
 ])
 
 var offset := Vector2.ZERO
-var tile_size := Vector2(64, 64)
-var is_horizontal := false
+var tile_size := Vector2(75, 89)
+var is_horizontal := true
 var fow_effect := FOWEffect.ShowAll
 
 signal on_config_changed(from_remote: bool)
@@ -156,11 +159,11 @@ func has_line_of_sight(from: Vector2i, to: Vector2i) -> bool:
 	return true
 
 func get_line(from: Vector2i, size: Size, to: Vector2i) -> Array[Vector2i]:
-	push_error("Cone tool not implemented")
+	Logger.log_error("Cone tool not implemented")
 	return []
 	
 func get_cone(from: Vector2i, size: Size, to: Vector2i) -> Array[Vector2i]:
-	push_error("Cone tool not implemented")
+	Logger.log_error("Cone tool not implemented")
 	return []
 
 func get_distance(from: Vector2i, size: Size, to: Vector2i) -> int:
@@ -214,7 +217,7 @@ func get_shortest_path(from: Vector2i, size: Size, to: Vector2i) -> Array[Vector
 	)
 	
 	if to not in cache:
-		push_error("Should not reach")
+		Logger.log_error("Should not reach")
 		return []
 	
 	var res: Array[Vector2i] = []
@@ -249,7 +252,7 @@ func get_sensors(origin: Vector2i, size: Size, sensors: int, ignore_los: bool=fa
 	return cache.keys()
 
 func update_visible_tiles() -> void:
-	visible_tiles.clear()
+	visible_tiles = always_visible_tiles.duplicate()
 	if fow_effect == FOWEffect.NoSensors:
 		return
 	for p in NetworkingSingleton.get_player_tokens():

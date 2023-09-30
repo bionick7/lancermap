@@ -8,6 +8,7 @@ enum MeasuringMode {
 	CONE,
 	BURST,
 	FOG,
+	VISIBLE,
 }
 
 var UNITY_HEXAGON_VERT := PackedVector2Array([
@@ -36,6 +37,7 @@ var active_measure_mode: MeasuringMode
 var from_pos = null
 var measure_size := 1 # temporary
 var draw_alignment_help := false
+var mouse_capture_boundry: Rect2
 
 @onready var default_font = Control.new().get_theme_default_font()
 @onready var map_shadermat: ShaderMaterial = $Map.material
@@ -44,9 +46,15 @@ signal grid_changed()
 
 func _ready():
 	measure_mode_button_group.pressed.connect(_on_mm_button_pressed)
+	get_viewport().size_changed.connect(func(): 
+		mouse_capture_boundry = %MouseCaptureArea.get_global_rect()
+	)
 	_on_fog_item_selected(%Fog.selected)
 	_on_grid_changed()
 	_on_visible_tiles_changed()
+	
+	await get_tree().process_frame
+	mouse_capture_boundry = %MouseCaptureArea.get_global_rect()
 
 func _input(event: InputEvent):
 	if event is InputEventMouseMotion and active_measure_mode != MeasuringMode.NONE:
@@ -69,9 +77,11 @@ func _draw():
 				running = Grid.get_neighbour(running, direction)
 			_draw_tile(running)
 				
-	if active_measure_mode == MeasuringMode.FOG:
-		for blocking in Grid.blocking_tiles:
-			_draw_tile_filled(blocking)
+	if active_measure_mode in [MeasuringMode.FOG, MeasuringMode.VISIBLE]:
+		for tile in Grid.always_visible_tiles:
+			_draw_tile_filled(tile, Color.GREEN)
+		for tile in Grid.blocking_tiles:
+			_draw_tile_filled(tile)
 				
 	# Draws measurements
 	if from_pos != null:
@@ -98,10 +108,18 @@ func _draw():
 			_draw_tile(tile, Color.CORNFLOWER_BLUE)
 
 func deserialize(data: Dictionary) -> void:
+	# TODO: update UI
+	%XInp.set_value_no_signal(data.offset.x)
+	%YInp.set_value_no_signal(data.offset.y)
+	%WidthInp.set_value_no_signal(data.tile_size.x)
+	%HeightInp.set_value_no_signal(data.tile_size.y)
+	%HorizontalGrid.button_pressed = data.is_horizontal
+	
 	Grid.offset = data.offset
 	Grid.tile_size = data.tile_size
 	Grid.is_horizontal = data.is_horizontal
 	Grid.blocking_tiles = data.blocking_tiles
+	Grid.always_visible_tiles = data.always_visible_tiles
 	Grid.fow_effect = data.fow_effect
 	%Fog.selected = data.fow_effect
 	Grid.on_config_changed.emit(true)
@@ -114,6 +132,7 @@ func serialize() -> Dictionary:
 		tile_size = Grid.tile_size,
 		is_horizontal = Grid.is_horizontal,
 		blocking_tiles = Grid.blocking_tiles,
+		always_visible_tiles = Grid.always_visible_tiles,
 		fow_effect = Grid.fow_effect,
 	}
 	
@@ -135,13 +154,22 @@ func update_map_visibility() -> void:
 	_on_visible_tiles_changed()
 	
 func _fog_draw_routine() -> void:
+	if not mouse_capture_boundry.has_point(get_viewport().get_mouse_position()):
+		return
 	var hovered_tile := _get_hovered_tile()
-	if active_measure_mode == MeasuringMode.FOG:
-		if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) and hovered_tile not in Grid.blocking_tiles:
-			Grid.blocking_tiles.append(hovered_tile)
+	if active_measure_mode in [MeasuringMode.FOG, MeasuringMode.VISIBLE]:
+		var tile_array := Grid.blocking_tiles if active_measure_mode == MeasuringMode.FOG else Grid.always_visible_tiles
+		var othertile_array := Grid.always_visible_tiles if active_measure_mode == MeasuringMode.FOG else Grid.blocking_tiles
+		if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) and hovered_tile not in tile_array:
+			if hovered_tile in othertile_array:
+				othertile_array.append(hovered_tile)
+			tile_array.append(hovered_tile)
 			_on_grid_changed()
 		elif Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) and hovered_tile in Grid.blocking_tiles:
 			Grid.blocking_tiles.erase(hovered_tile)
+			_on_grid_changed()
+		elif Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) and hovered_tile in Grid.always_visible_tiles:
+			Grid.always_visible_tiles.erase(hovered_tile)
 			_on_grid_changed()
 	for t in NetworkingSingleton.tokens.values():
 		t.visible = t.is_token_visible()
@@ -219,6 +247,7 @@ func _on_horizontal_changed(button_pressed: bool) -> void:
 
 func _on_mm_button_pressed(button: Button) -> void:
 	active_measure_mode = button.get_meta("mode", 0)
+	queue_redraw()
 
 func _on_fog_item_selected(index: Grid.FOWEffect) -> void:
 	Grid.fow_effect = index

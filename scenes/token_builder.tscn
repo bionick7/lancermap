@@ -1,8 +1,11 @@
-[gd_scene load_steps=5 format=3 uid="uid://bfnmgqnqjbj7o"]
+[gd_scene load_steps=8 format=3 uid="uid://bfnmgqnqjbj7o"]
 
 [ext_resource type="Script" path="res://scenes/token_builder.gd" id="1_6ick5"]
+[ext_resource type="Theme" uid="uid://ljdjbrdcn3fr" path="res://UI/ui_theme.tres" id="1_dbuxh"]
 [ext_resource type="Texture2D" uid="uid://cbdnjpjhir6el" path="res://icon.png" id="2_ytsc6"]
+[ext_resource type="FontFile" uid="uid://8fgw5ees0loc" path="res://UI/compcon.ttf" id="3_2b3pv"]
 [ext_resource type="Script" path="res://scenes/transform_preview.gd" id="3_t6f0m"]
+[ext_resource type="Script" path="res://scenes/Tunicodelabel.gd" id="4_to0p6"]
 
 [sub_resource type="ButtonGroup" id="ButtonGroup_jxruq"]
 resource_name = "Sizes"
@@ -11,6 +14,7 @@ resource_name = "Sizes"
 title = "Setup Sprite"
 size = Vector2i(291, 471)
 visible = true
+theme = ExtResource("1_dbuxh")
 script = ExtResource("1_6ick5")
 size_buttons = SubResource("ButtonGroup_jxruq")
 
@@ -18,7 +22,7 @@ size_buttons = SubResource("ButtonGroup_jxruq")
 offset_left = 8.0
 offset_top = 8.0
 offset_right = 283.0
-offset_bottom = 422.0
+offset_bottom = 424.0
 
 [node name="H" type="HBoxContainer" parent="V"]
 layout_mode = 2
@@ -30,30 +34,47 @@ text = "Size:"
 
 [node name="Size1" type="Button" parent="V/H"]
 layout_mode = 2
+theme_override_fonts/font = ExtResource("3_2b3pv")
+theme_override_font_sizes/font_size = 32
 toggle_mode = true
+button_pressed = true
 button_group = SubResource("ButtonGroup_jxruq")
-text = "½,1"
+text = ""
+script = ExtResource("4_to0p6")
+codepoint = 59728
 metadata/size = 1
 
 [node name="Size2" type="Button" parent="V/H"]
 layout_mode = 2
+theme_override_fonts/font = ExtResource("3_2b3pv")
+theme_override_font_sizes/font_size = 32
 toggle_mode = true
 button_group = SubResource("ButtonGroup_jxruq")
-text = "2"
+text = ""
+script = ExtResource("4_to0p6")
+codepoint = 59729
 metadata/size = 2
 
 [node name="Size3" type="Button" parent="V/H"]
 layout_mode = 2
+theme_override_fonts/font = ExtResource("3_2b3pv")
+theme_override_font_sizes/font_size = 32
 toggle_mode = true
 button_group = SubResource("ButtonGroup_jxruq")
-text = "3"
+text = ""
+script = ExtResource("4_to0p6")
+codepoint = 59730
 metadata/size = 3
 
 [node name="Size4" type="Button" parent="V/H"]
 layout_mode = 2
+theme_override_fonts/font = ExtResource("3_2b3pv")
+theme_override_font_sizes/font_size = 32
 toggle_mode = true
 button_group = SubResource("ButtonGroup_jxruq")
-text = "4"
+text = ""
+script = ExtResource("4_to0p6")
+codepoint = 59731
 metadata/size = 4
 
 [node name="Label" type="Label" parent="V"]

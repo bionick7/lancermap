@@ -9,6 +9,10 @@ var queued_drops: Array[Texture2D] = []
 @onready var token_builder: TokenBuilder = $TokenBuilder
 
 func _ready():
+	NetworkingSingleton.gm_status_changed.connect(
+		func(x): %GMSpecific.visible = x
+	)
+	
 	socket.connected_to_server.connect(_on_connected)
 	socket.connection_closed.connect(_on_disconnected)
 	socket.token_data_received.connect(_on_token_data_received)
@@ -20,17 +24,26 @@ func _ready():
 	get_viewport().files_dropped.connect(_on_files_dropped)
 	token_builder.request_remove.connect(_remove_token.bind(true))
 		
-	if ProjectSettings.get("connections/in_testing"):
-		socket.connect_to_url(ProjectSettings.get("connections/test_socket_url"))
-	else:
-		socket.connect_to_url(ProjectSettings.get("connections/socket_url"))
-	#socket.connect_to_url("wss://lancermap.fly.dev")
+	_attempt_connection()
+	var timer := Timer.new()
+	add_child(timer)
+	timer.start(4)
+	timer.timeout.connect(_attempt_connection)
 	
-	%ConnectionStatus.text = "Offline"
+	# Initialize it to this state
+	_on_disconnected()
 
 func _input(event: InputEvent):
 	if event is InputEventMouseMotion:
 		_handle_filedrops(get_global_mouse_position())
+
+func _attempt_connection() -> void:
+	if not socket.is_socket_connected():
+		print("Attempting connection")
+		if ProjectSettings.get("connections/in_testing"):
+			socket.connect_to_url(ProjectSettings.get("connections/test_socket_url"))
+		else:
+			socket.connect_to_url(ProjectSettings.get("connections/socket_url"))
 
 func _handle_filedrops(mouse_pos: Vector2) -> void:
 	while len(queued_drops) > 0:
@@ -58,11 +71,22 @@ func _handle_filedrops(mouse_pos: Vector2) -> void:
 #func _process(delta):
 #	print(get_global_mouse_position())
 
+func _update_connection_status() -> void:
+	if socket.is_socket_connected():
+		var status := "(no room)"
+		if NetworkingSingleton.is_room_valid():
+			status = "(gm)" if NetworkingSingleton.is_gm else "(player)"
+		%ConnectionStatus.text = "Connected " + status
+		%ConnectionStatus.modulate = Color.GREEN
+	else:
+		%ConnectionStatus.text = "Offline"
+		%ConnectionStatus.modulate = Color.RED
+
 func _on_connected() -> void:
-	%ConnectionStatus.text = "Connected"
+	_update_connection_status()
 	
 func _on_disconnected() -> void:
-	%ConnectionStatus.text = "Offline"
+	_update_connection_status()
 	
 func _spawn_token(id: int) -> Token:
 	var res := TOKEN_TEMPLATE.instantiate()
@@ -143,7 +167,7 @@ func _on_token_list_received(tokens: PackedInt64Array) -> void:
 func _on_token_kill_received(token_id: int) -> void:
 	print("%s Recieved token kill %s" % [NetworkingSingleton.self_name, token_id])
 	if token_id not in NetworkingSingleton.tokens:
-		push_error("Tried to remove unexisting token %X" % token_id)
+		Logger.log_error("Tried to remove unexisting token %X" % token_id)
 		return
 	_remove_token(NetworkingSingleton.tokens[token_id], false)
 
@@ -156,13 +180,18 @@ func _on_files_dropped(files: PackedStringArray) -> void:
 		if is_instance_valid(img):
 			$HexMap/Map.set_map(img)
 		else:
-			push_error("Could not open \"%s\"" % map_file)
+			Logger.log_error("Could not open \"%s\"" % map_file)
 			socket.send(WebSocketClient.RequestActionCode.SET_IMG, 0)
 		_update_map_image()
 	for fp in files:
-		var img := Image.load_from_file(fp)
-		var texture := ImageTexture.create_from_image(img)
-		queued_drops.append(texture)
+		if fp.ends_with(".bin") and NetworkingSingleton.is_gm:
+			load_save(fp)
+		else:
+			for ending in [".png", ".jpg", ".bmp", ".exr", ".jpeg"]:
+				if fp.ends_with(ending):
+					var img := Image.load_from_file(fp)
+					var texture := ImageTexture.create_from_image(img)
+					queued_drops.append(texture)
 	get_window().grab_focus()
 
 func _on_host_pressed():
@@ -171,7 +200,6 @@ func _on_host_pressed():
 	socket.send(WebSocketClient.RequestActionCode.REG_AS_GM)
 	_update_grid(false)
 	_update_map_image()
-	%ConnectionStatus.text = "Playing as Gm"
 	
 	for id in NetworkingSingleton.tokens:
 		NetworkingSingleton.tokens[id].is_online = true
@@ -181,20 +209,45 @@ func _on_host_pressed():
 	var joined_successfull: bool = await socket.room_ready
 	if joined_successfull:
 		$HexMap/Map.set_map($HexMap/Map.texture.get_image())
+	_update_connection_status()
 
 func _on_join_pressed():
-	NetworkingSingleton.is_gm = false
 	NetworkingSingleton.room = %RoomName.text
 	socket.send(WebSocketClient.RequestActionCode.REG_AS_PLAYER)
-	%ConnectionStatus.text = "Playing as Player"
 	var keys := NetworkingSingleton.tokens.keys()
 	for id in keys:
 		NetworkingSingleton.tokens[id].queue_free()
 		NetworkingSingleton.tokens.erase(id)
 		
 	var joined_successfull: bool = await socket.room_ready
+	if joined_successfull:
+		NetworkingSingleton.is_gm = false
+		_update_connection_status()
+		map.update_map_visibility()
 
 func _on_set_map_pressed():
 	if not NetworkingSingleton.is_gm:
 		return
 	$ExpectingMap.popup_centered()
+
+func download_save():
+	var save_data := {
+		map_data = map.serialize(),
+		map_image = $HexMap/Map.texture.get_image().save_png_to_buffer(),
+		token_data = NetworkingSingleton.tokens.values().map(func(x): return x.serialize()),
+		token_images = NetworkingSingleton.tokens.values().map(func(x): return x.serialize_image()),
+	}
+	JavaScriptBridge.download_buffer(var_to_bytes(save_data), "lmap.bin")
+	
+func load_save(filename: String):
+	var save_data: Dictionary = bytes_to_var(FileAccess.get_file_as_bytes(filename))
+	map.deserialize(save_data.map_data)
+	var map_img := Image.new()
+	map_img.load_png_from_buffer(save_data.map_image)
+	$HexMap/Map.set_map(map_img)
+	
+	assert(len(save_data.token_data) == len(save_data.token_images))
+	for i in range(len(save_data.token_data)):
+		var token_id = (randi() << 32) + randi()
+		_on_token_data_received(token_id, save_data.token_data[i])
+		_on_token_imgdata_received(token_id, save_data.token_images[i])

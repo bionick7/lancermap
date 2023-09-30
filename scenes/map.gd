@@ -2,11 +2,6 @@ class_name MapSprite
 extends Sprite2D
 
 var url_base: String
-
-var custom_headers := PackedStringArray([
-	#"Access-Control-Allow-Origin: https://lancermap.fly.dev",
-])
-
 var is_requesting := false
 
 var http_handler: HttpImageHandler
@@ -54,7 +49,8 @@ func download_map(room_name: String="") -> void:
 		texture = ImageTexture.create_from_image(image)
 
 func _should_use_http() -> bool:
-	return OS.get_name() != "Web"
+	return true
+	#return OS.get_name() != "Web"
 
 #func _should_use_http() -> bool:
 #	return false
